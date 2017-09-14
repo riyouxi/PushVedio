@@ -120,8 +120,8 @@ public class MediaPublisher {
         }
 
         try {
-            int colorFormat = mMediaEncoder.initVideoEncoder(videoParams.previewWidth,
-                    videoParams.previewHeight, mConfig.fps);
+            int colorFormat = mMediaEncoder.initVideoEncoder(videoParams.previewHeight,
+                    videoParams.previewWidth, mConfig.fps);
             mVideoGatherer.setColorFormat(colorFormat);
         } catch (IOException e) {
             e.printStackTrace();
@@ -212,7 +212,8 @@ public class MediaPublisher {
             @Override
             public void onReceive(byte[] data, int colorFormat) {
                 if (isPublish) {
-                    mMediaEncoder.putVideoData(data);
+                    byte[] temp =Yuv420Util.rotateYUV420Degree90(data,videoParams.previewWidth,videoParams.previewHeight);
+                    mMediaEncoder.putVideoData(temp);
                 }
             }
         });
