@@ -46,10 +46,18 @@ public class VideoGatherer {
     public static class Params {
         public final int previewWidth;
         public final int previewHeight;
+        public int pos= 0;
 
         public Params(int width, int height) {
             this.previewWidth = width;
             this.previewHeight = height;
+        }
+
+        public Params(int width, int height,int pos) {
+            this.previewWidth = width;
+            this.previewHeight = height;
+            Log.e("width-height",width+"height:"+height);
+            this.pos = pos;
         }
     }
 
@@ -82,13 +90,18 @@ public class VideoGatherer {
     /**
      * 初始化Camera
      */
-    public Params initCamera(Activity act, SurfaceHolder holder) {
-        // first release
+    public Params initCamera(Activity act,int pos, SurfaceHolder holder) {
+        // first releasei
         release();
 
-        openCamera();
+        openCamera(pos);
         setCameraParameters();
-        setCameraDisplayOrientation(act, Camera.CameraInfo.CAMERA_FACING_BACK, mCamera);
+        if(pos == 0){
+            setCameraDisplayOrientation(act, Camera.CameraInfo.CAMERA_FACING_BACK, mCamera);
+        }else {
+            setCameraDisplayOrientation(act, Camera.CameraInfo.CAMERA_FACING_FRONT, mCamera);
+        }
+
         try {
             mCamera.setPreviewDisplay(holder);
         } catch (IOException e) {
@@ -103,7 +116,7 @@ public class VideoGatherer {
         initWorkThread();
         loop = true;
         workThread.start();
-        return new Params(previewSize.width, previewSize.height);
+        return new Params(previewSize.width, previewSize.height,pos);
     }
 
     private void initWorkThread() {
@@ -280,10 +293,15 @@ public class VideoGatherer {
         camera.setDisplayOrientation(result);
     }
 
-    private void openCamera() {
+    private void openCamera(int pos) {
         if (mCamera == null) {
             try {
-                mCamera = Camera.open();
+                if(pos == 0){
+                    mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+                }else{
+                    mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException("打开摄像头失败", e);

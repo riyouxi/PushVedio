@@ -104,6 +104,79 @@ public class Yuv420Util {
 
     }
 
+    //逆时针旋转90
+    public static void YUV420spRotate90Anticlockwise(byte[] src, byte[] dst, int width, int height) {
+        int wh = width * height;
+        int uvHeight = height >> 1;
+
+        //旋转Y
+        int k = 0;
+        for (int i = 0; i < width; i++) {
+            int nPos = width - 1;
+            for (int j = 0; j < height; j++) {
+                dst[k] = src[nPos - i];
+                k++;
+                nPos += width;
+            }
+        }
+
+        for (int i = 0; i < width; i += 2) {
+            int nPos = wh + width - 1;
+            for (int j = 0; j < uvHeight; j++) {
+                dst[k] = src[nPos - i - 1];
+                dst[k + 1] = src[nPos - i];
+                k += 2;
+                nPos += width;
+            }
+        }
+
+        //不进行镜像翻转
+//        for (int i = 0; i < width; i++) {
+//            int nPos = width - 1;
+//            for (int j = 0; j < height; j++) {
+//                dst[k] = src[nPos - i];
+//                k++;
+//                nPos += width;
+//            }
+//        }
+//        for (int i = 0; i < width; i += 2) {
+//            int nPos = wh + width - 2;
+//            for (int j = 0; j < uvHeight; j++) {
+//                dst[k] = src[nPos - i];
+//                dst[k + 1] = src[nPos - i + 1];
+//                k += 2;
+//                nPos += width;
+//            }
+//        }
+
+    }
+
+    public static void YUV420spRotate180(byte[] des,byte[] src,int width,int height)
+    {
+        int n = 0;
+        int uh = height >> 1;
+        int wh = width * height;
+        //copy y
+        for(int j = height - 1; j >= 0; j--)
+        {
+            for(int i = width - 1; i >= 0; i--)
+            {
+                des[n++] = src[width * j + i];
+            }
+        }
+
+
+        for(int j = uh - 1;j >= 0; j--)
+        {
+            for(int i = width - 1; i > 0; i -= 2)
+            {
+                des[n] = src[wh + width * j + i - 1];
+                des[n + 1] = src[wh + width * j + i];
+                n += 2;
+            }
+        }
+    }
+
     private static void yuv420spRotate90(byte[] des, byte[] src,
                                          int width, int height) {
         int wh = width * height;
@@ -169,4 +242,27 @@ public class Yuv420Util {
             yuv[i]= data[(imageWidth*imageHeight)+(y*imageWidth)+(x-1)];
             i--;}}return yuv;}
 
+
+    public static void YUV420spRotate270(byte[] des,byte[] src,int width,int height) {
+        int n = 0;
+        int uvHeight = height >> 1;
+        int wh = width * height;
+        //copy y
+        for(int j = width - 1; j >= 0; j--)
+        {
+            for(int i = 0; i < height;i++)
+            {
+                des[n++] = src[width * i + j];
+            }
+        }
+
+        for(int j = width - 1; j > 0;j -= 2)
+        {
+            for(int i = 0; i < uvHeight; i++)
+            {
+                des[n++] = src[wh + width * i + j - 1];
+                des[n++] = src[wh + width * i + j];
+            }
+        }
+    }
 }

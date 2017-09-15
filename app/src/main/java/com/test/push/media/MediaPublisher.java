@@ -45,6 +45,7 @@ public class MediaPublisher {
     private AudioGatherer.Params audioParams;
     private VideoGatherer.Params videoParams;
     private boolean loop;
+    private int pos;
 
 
     public static MediaPublisher newInstance(Config config) {
@@ -97,8 +98,9 @@ public class MediaPublisher {
      * @param act
      * @param holder
      */
-    public void initVideoGatherer(Activity act, SurfaceHolder holder) {
-        videoParams = mVideoGatherer.initCamera(act, holder);
+    public void initVideoGatherer(Activity act, int pos,SurfaceHolder holder) {
+        this.pos = pos;
+        videoParams = mVideoGatherer.initCamera(act,pos, holder);
     }
 
     /**
@@ -111,7 +113,7 @@ public class MediaPublisher {
     /**
      * 初始化编码器
      */
-    public void initEncoders() {
+    public void initEncoders(int pos) {
         try {
             mMediaEncoder.initAudioEncoder(audioParams.sampleRate, audioParams.channelCount);
         } catch (IOException e) {
@@ -121,7 +123,7 @@ public class MediaPublisher {
 
         try {
             int colorFormat = mMediaEncoder.initVideoEncoder(videoParams.previewHeight,
-                    videoParams.previewWidth, mConfig.fps);
+                    videoParams.previewWidth, mConfig.fps,pos);
             mVideoGatherer.setColorFormat(colorFormat);
         } catch (IOException e) {
             e.printStackTrace();
@@ -133,6 +135,16 @@ public class MediaPublisher {
      */
     public void startEncoder() {
         mMediaEncoder.start();
+    }
+
+    public void startVedioEncoder(){
+        setListener();
+        mMediaEncoder.startVideoEncode();
+    }
+
+    public void stopVeidioEncoder(){
+        mVideoGatherer.setCallback(null);
+        mMediaEncoder.stopVideoEncode();
     }
 
     /**
@@ -172,6 +184,7 @@ public class MediaPublisher {
                 mRtmpPublisher.stop();
                 loop = false;
                 workThread.interrupt();
+                isPublish = false;
             }
         };
 
@@ -190,6 +203,14 @@ public class MediaPublisher {
      */
     public void stopGather() {
         mAudioGatherer.stop();
+    }
+
+    public void vedioRelease(){
+        mVideoGatherer.release();;
+    }
+
+    public int getCurrentPos(){
+        return videoParams.pos;
     }
 
     /**
@@ -212,8 +233,15 @@ public class MediaPublisher {
             @Override
             public void onReceive(byte[] data, int colorFormat) {
                 if (isPublish) {
-                    byte[] temp =Yuv420Util.rotateYUV420Degree90(data,videoParams.previewWidth,videoParams.previewHeight);
-                    mMediaEncoder.putVideoData(temp);
+                    if(pos == 0){
+                        byte[] temp =Yuv420Util.rotateYUV420Degree90(data,videoParams.previewWidth,videoParams.previewHeight);
+                        mMediaEncoder.putVideoData(temp);
+                    }else{
+                        byte[] temp = new byte[data.length];
+                        Yuv420Util.YUV420spRotate270(temp,data,videoParams.previewWidth,videoParams.previewHeight);
+                        mMediaEncoder.putVideoData(temp);
+                    }
+
                 }
             }
         });

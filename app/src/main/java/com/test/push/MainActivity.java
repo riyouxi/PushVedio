@@ -11,18 +11,22 @@ import android.widget.Button;
 import com.test.push.media.Config;
 import com.test.push.media.MediaPublisher;
 
+import java.io.IOException;
+
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback2 {
 
     private static final String TAG = "MainActivity";
 
-    private Button btnToggle;
+    private Button btnToggle,btnSwitch;
     private SurfaceView mSurfaceView;
 
     private SurfaceHolder mSurfaceHolder;
     private boolean isPublished;
 
     private MediaPublisher mMediaPublisher;
+
+    private int pos=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         initView();
         mMediaPublisher = MediaPublisher
                 .newInstance(new Config.Builder()
-                        .setFps(30) // fps
+                        .setFps(20) // fps
                         .setMaxWidth(720) //视频的最大宽度
                         .setMinWidth(320) //视频的最小宽度
                         .setUrl("rtmp://192.168.1.109/live/1935")//推送的url
@@ -42,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     private void initView() {
         btnToggle = (Button) findViewById(R.id.btn_toggle);
+        btnSwitch = (Button) findViewById(R.id.btn_switch);
         mSurfaceView = (SurfaceView) findViewById(R.id.surface_view);
         mSurfaceView.setKeepScreenOn(true);
         mSurfaceHolder = mSurfaceView.getHolder();
@@ -50,6 +55,21 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onClick(View v) {
                 switchPublish();
+            }
+        });
+        btnSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+//
+                if(mMediaPublisher.getCurrentPos() == 0){
+                    pos = 1;
+
+                    mMediaPublisher.initVideoGatherer(MainActivity.this,1,mSurfaceHolder);
+                }else {
+                    pos =0;
+                    mMediaPublisher.initVideoGatherer(MainActivity.this,0,mSurfaceHolder);
+                }
             }
         });
     }
@@ -67,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         //初始化声音采集
         mMediaPublisher.initAudioGatherer();
         //初始化编码器
-        mMediaPublisher.initEncoders();
+        mMediaPublisher.initEncoders(pos);
         //开始采集
         mMediaPublisher.startGather();
         //开始编码
@@ -81,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume: ");
-        mMediaPublisher.initVideoGatherer(this, mSurfaceHolder);
+        mMediaPublisher.initVideoGatherer(this, pos,mSurfaceHolder);
 
     }
 
@@ -118,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         Log.i(TAG, "surfaceChanged: ");
-        mMediaPublisher.initVideoGatherer(MainActivity.this, holder);
+        mMediaPublisher.initVideoGatherer(MainActivity.this,pos, holder);
     }
 
     @Override

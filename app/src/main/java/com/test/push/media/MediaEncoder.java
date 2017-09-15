@@ -107,11 +107,17 @@ public class MediaEncoder {
      * @param height 视频的高
      * @throws IOException 创建编码器失败
      */
-    public int initVideoEncoder(int width, int height, int fps) throws IOException {
+    public int initVideoEncoder(int width, int height, int fps,int pos) throws IOException {
         // 初始化
         MediaCodecInfo mediaCodecInfo = getMediaCodecInfoByType(MediaFormat.MIMETYPE_VIDEO_AVC);
         int colorFormat = getColorFormat(mediaCodecInfo);
         MediaCodec vencoder = MediaCodec.createByCodecName(mediaCodecInfo.getName());
+        if(pos == 1){
+            int temp ;
+            temp = width;
+            width = height;
+            height = temp;
+        }
         MediaFormat format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC,
                 width, height);
         format.setInteger(KEY_MAX_INPUT_SIZE, 0);
@@ -222,7 +228,9 @@ public class MediaEncoder {
     public void stopVideoEncode() {
         videoEncoderLoop = false;
         videoEncoderThread.interrupt();
+        videoQueue.clear();
         vEncoder.stop();
+        vEncoder = null;
     }
 
     /**
@@ -239,7 +247,10 @@ public class MediaEncoder {
      * 释放视频编码器
      */
     public void releaseVideoEncoder() {
-        vEncoder.release();
+        if(vEncoder!=null){
+            vEncoder.release();
+        }
+
     }
 
     /**
